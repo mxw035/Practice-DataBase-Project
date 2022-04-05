@@ -2,9 +2,10 @@ import sqlite3
 import math
 import matplotlib.pyplot as plt
 import numpy as np 
-
+import re 
 db = sqlite3.connect("nau.db")
-
+eth_name = []
+e_ret = []
 # functions 
 
 
@@ -13,6 +14,8 @@ db = sqlite3.connect("nau.db")
 def eth_R_NOT(e, num):
     eth_r = db.execute("SELECT DISTINCT COUNT(STUDENT_ID) FROM naudata WHERE N__IPEDS_ETHNICITY=? AND ENROLLED_FALL_2020='Y'", e)
     eth_not = db.execute("SELECT DISTINCT COUNT(STUDENT_ID) FROM naudata WHERE N__IPEDS_ETHNICITY=? AND ENROLLED_FALL_2020='N/A'", e)
+    eth_name.append(e)
+    eth_name.append(num)
     for r in eth_r: 
         for rn in eth_not: 
             num = int(num)
@@ -20,6 +23,11 @@ def eth_R_NOT(e, num):
             rn = int(rn[0])
             print("Eth: ", e, "Ret: ", r, "Not: ", rn)
             print("Ret per: ", math.floor((r/num)*100), "%")
+            ret = math.floor((r/num)*100)
+            enot = math.floor((rn/num)*100)
+            e_ret.append(e)
+            e_ret.append(ret)
+            e_ret.append(enot)
             print("Not per: ", math.floor((rn/num)*100), "%")
             
     return
@@ -33,6 +41,7 @@ def ethnicity():
         #gets the total amount of students who identify as that ethnicity
         eth_num = db.execute("SELECT DISTINCT COUNT(STUDENT_ID) FROM naudata WHERE N__IPEDS_ETHNICITY=?", e)
         for ep in eth_num:
+            
             #gets the  percentage of students per ethnicity 
             per = math.floor((ep[0]/30832)*100)
             if per < 1: 
@@ -40,6 +49,7 @@ def ethnicity():
                 print("Eth: ", e, ep, per,"%")
             else: 
                 print("Eth: ", e, ep, per,"%")
+                
             # takes the ethnicity name (e) and the total number of students who identify as that ethnicity (ep[0]) and plugs them in to the eth_R_NOT fxn to get retention vs non retention numbers and percentage. 
             eth_R_NOT(e, ep[0])
     return 
@@ -118,7 +128,6 @@ print("Female: ")
 femper = num_per(gen_female, num_tot)
 femret = get_per_ret("GENDER='F'")
 femnot = get_per_not("GENDER='F'")
-print(femret, femnot)
 
 male = db.execute("SELECT DISTINCT COUNT(STUDENT_ID) FROM naudata WHERE GENDER='M'")
 for m in male: 
@@ -252,12 +261,64 @@ def gen_eth_ret(whiteret, whitenot, nonret, nonnot):
     plt.pie(y, labels = mylabs) 
     plt.show()
     return 
-gen_eth_ret(whiteret, whitenot, nonret, nonnot)
+#gen_eth_ret(whiteret, whitenot, nonret, nonnot)
 
 
 #runs ethinicity fxn 
 ethnicity()
+#print(eth_name)
 
+def long_eth_pie(eth_name): 
+    num = []
+    name = []
+    r = range(0, 18, 2)
+    for n in r: 
+        name.append(eth_name[n])
+        num.append(eth_name[n+1])
+    y = np.array(num)
+    lab = ["HISPA", "WHITE", "ASIAN", "INTL", "NSPEC", "TWOMORE", "BLACK", "AMIND", "PACIF"]
+    plt.pie(y, labels = lab)
+    plt.show()
+    return 
+#long_eth_pie(eth_name)
 
+def spec_eth_ret(e_ret): 
+    name = []
+    ret = []
+    non = []
+    r = range(0, 27, 3)
+    for n in r: 
+        name.append(e_ret[n])
+        ret.append(e_ret[n+1])
+        non.append(e_ret[n+2])
+        
+    print("ret", ret)
+    y = np.array(ret)
+    lab = ["HISPA", "WHITE", "ASIAN", "INTL", "NSPEC", "TWOMORE", "BLACK", "AMIND", "PACIF"]
+    plt.pie(y, labels = lab)
+    #plt.legend(title="Retained")
+    plt.title("Retained")
+    plt.show()
 
-                       
+    return 
+#spec_eth_ret(e_ret)
+
+def spec_eth_non(e_ret): 
+    name = []
+    ret = []
+    non = []
+    r = range(0, 27, 3)
+    for n in r: 
+        name.append(e_ret[n])
+        ret.append(e_ret[n+1])
+        non.append(e_ret[n+2])
+        
+    
+    y = np.array(non)
+    lab = ["HISPA", "WHITE", "ASIAN", "INTL", "NSPEC", "TWOMORE", "BLACK", "AMIND", "PACIF"]
+    plt.pie(y, labels = lab)
+    #plt.legend(title="Not Retained")
+    plt.title("Not Retained")
+    plt.show()
+    return 
+#spec_eth_non(e_ret)                      
